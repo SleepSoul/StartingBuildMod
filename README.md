@@ -11,3 +11,7 @@ This mod allows you to define a build for all runs to start with, per-aspect.
 `UpdateHistory`: If true, the mod will update `CurrentRun.LootTypeHistory` with all the boons you've set. If false, the game will behave as if you have not seen any gods yet. *True is recommended for most purposes.*
 
 `AspectSettings` holds the per-aspect config.
+
+### Dependencies
+
+StartingBuildMod requires [ModUtil](https://github.com/SGG-Modding/ModUtil) 2.8.0 and RCLib.

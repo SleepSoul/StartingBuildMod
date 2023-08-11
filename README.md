@@ -8,6 +8,6 @@ This mod allows you to define a build for all runs to start with, per-aspect.
 
 `BlockStartingReward`: If true, no reward will drop in chamber 1.
 
-`UpdateHistory`: If true, the mod will update `CurrentRun.LootTypeHistory` with all the boons you've set. If false, the game will behave as if you have not seen any gods yet. *This is recommended for most purposes.*
+`UpdateHistory`: If true, the mod will update `CurrentRun.LootTypeHistory` with all the boons you've set. If false, the game will behave as if you have not seen any gods yet. *True is recommended for most purposes.*
 
 `AspectSettings` holds the per-aspect config.

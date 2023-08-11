@@ -67,6 +67,10 @@ ModUtil.Path.Wrap( "SpawnRoomReward", function ( baseFunc, lootData, args )
                     end
                 end
             end
+
+            if settings.MaxHealth then
+                AddMaxHealth( settings.MaxHealth - 50, nil )
+            end
         end
 
         if not StartingBuildMod.config.BlockStartingReward then

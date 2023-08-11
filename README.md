@@ -14,4 +14,4 @@ This mod allows you to define a build for all runs to start with, per-aspect.
 
 ### Dependencies
 
-StartingBuildMod requires [ModUtil](https://github.com/SGG-Modding/ModUtil) 2.8.0 and RCLib.
+StartingBuildMod requires [ModUtil](https://github.com/SGG-Modding/ModUtil) 2.8.0 and [RCLib](https://github.com/Hades-Speedrunning/RCLib).

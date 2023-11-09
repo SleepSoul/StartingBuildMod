@@ -11,7 +11,7 @@ ModUtil.Path.Wrap( "SpawnRoomReward", function ( baseFunc, lootData, args )
     if StartingBuildMod.config.Enabled and CurrentRun.CurrentRoom.Name == "RoomOpening" then
         CurrentRun.LootTypeHistory = CurrentRun.LootTypeHistory or {}
 
-        local aspect = RCLib.GetAspectName() or nil
+        local aspect = RCLib.GetAspectName()
         local settings = StartingBuildMod.config.AspectSettings[aspect] or {}
         if type( settings.Build ) == "string" then
             settings.Build = StartingBuildMod.Presets[settings.Build]
@@ -23,7 +23,7 @@ ModUtil.Path.Wrap( "SpawnRoomReward", function ( baseFunc, lootData, args )
 
             if not IsEmpty( startingBoons ) then
                 for _, boon in ipairs( startingBoons ) do
-                    local boonName = RCLib.EncodeBoon( boon.Name ) or nil
+                    local boonName = RCLib.EncodeBoon( boon.Name )
                     local boonLevel = boon.Level or "1"
                     local boonRarity = boon.Rarity or "Common"
 
@@ -52,7 +52,7 @@ ModUtil.Path.Wrap( "SpawnRoomReward", function ( baseFunc, lootData, args )
 
             if not IsEmpty( startingHammers ) then
                 for _, hammer in ipairs( startingHammers ) do
-                    local hammerName = RCLib.EncodeHammer( hammer ) or nil
+                    local hammerName = RCLib.EncodeHammer( hammer )
 
                     if hammerName == nil then
                         DebugPrint({ Text = "Cannot add " .. hammer .. ", invalid" })

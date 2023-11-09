@@ -7,65 +7,67 @@
 
 ModUtil.Mod.Register( "StartingBuildMod" )
 
-ModUtil.Path.Wrap( "SpawnRoomReward", function ( baseFunc, lootData, args )
+function StartingBuildMod.AddBoon( boon )
+    local boonCode = RCLib.EncodeBoon( boon.Name )
+    local boonLevel = boon.Level or 1
+    local boonRarity = boon.Rarity or "Common"
+
+    if boonCode and RCLib.InferItemType( boonCode ) == "Trait" then
+        for i = 1, boonLevel do -- Poms are just duplicates of the same boon
+            AddTraitToHero({ TraitName = boonCode, Rarity = boonRarity })
+        end
+
+        if StartingBuildMod.config.UpdateHistory then
+            local boonData = RCLib.InferItemData( boonCode )
+            local godCode = RCLib.EncodeBoonSet( boonData.God )
+            StartingBuildMod.IncrementGodCount( godCode )
+        end
+
+        UpdateHeroTraitDictionary()
+        SortPriorityTraits()
+    end
+end
+
+function StartingBuildMod.AddHammer( hammerName )
+    local hammerCode = RCLib.EncodeHammer( hammerName )
+
+    if hammerCode then
+        AddTraitToHero({ TraitName = hammerCode })
+        if StartingBuildMod.config.UpdateHistory then
+            StartingBuildMod.IncrementGodCount( "WeaponUpgrade" )
+        end
+        
+        UpdateHeroTraitDictionary()
+        SortPriorityTraits()
+    end
+end
+
+function StartingBuildMod.IncrementGodCount( godCode ) -- Increment CurrentRun.LootTypeHistory as the game would if a god were picked up naturally
+    if not godCode then return end
+    if CurrentRun.LootTypeHistory[godCode] == nil then CurrentRun.LootTypeHistory[godCode] = 0 end
+    CurrentRun.LootTypeHistory[godCode] = CurrentRun.LootTypeHistory[godCode] + 1
+end
+
+ModUtil.Path.Wrap( "SpawnRoomReward", function ( baseFunc, ... )
     if StartingBuildMod.config.Enabled and CurrentRun.CurrentRoom.Name == "RoomOpening" then
         CurrentRun.LootTypeHistory = CurrentRun.LootTypeHistory or {}
 
         local aspect = RCLib.GetAspectName()
         local settings = StartingBuildMod.config.AspectSettings[aspect] or {}
-        if type( settings.Build ) == "string" then
-            settings.Build = StartingBuildMod.Presets[settings.Build]
+        if type( settings.Boons ) == "string" then
+            settings.Boons = StartingBuildMod.Presets[settings.Boons]
         end
 
         if not IsEmpty( settings ) then
-            local startingBoons = settings.Build or {}
+            local startingBoons = settings.Boons or {}
             local startingHammers = settings.Hammers or {}
 
-            if not IsEmpty( startingBoons ) then
-                for _, boon in ipairs( startingBoons ) do
-                    local boonName = RCLib.EncodeBoon( boon.Name )
-                    local boonLevel = boon.Level or "1"
-                    local boonRarity = boon.Rarity or "Common"
-
-                    if boonName == nil then
-                        DebugPrint({ Text = "Cannot add " .. boon.Name .. ", invalid" })
-                    else
-                        for i = 1, boonLevel do
-                            AddTraitToHero({ TraitName = boonName, Rarity = boonRarity })
-                        end
-
-                        if StartingBuildMod.config.UpdateHistory then
-                            local boonData = TraitData[boonName] or {}
-                            local godCode = RCLib.EncodeBoonSet( boonData.God )
-                            if godCode then
-                                if CurrentRun.LootTypeHistory[godCode] == nil then CurrentRun.LootTypeHistory[godCode] = 0 end
-                                CurrentRun.LootTypeHistory[godCode] = CurrentRun.LootTypeHistory[godCode] + 1
-                            end
-                        end
-
-                        UpdateHeroTraitDictionary()
-                        SortPriorityTraits()
-                        DebugPrint({ Text = "Added Level " .. boonLevel .. " " .. boonRarity .. " " .. boon.Name })
-                    end
-                end
+            for _, boon in ipairs( startingBoons ) do
+                StartingBuildMod.AddBoon( boon )
             end
 
-            if not IsEmpty( startingHammers ) then
-                for _, hammer in ipairs( startingHammers ) do
-                    local hammerName = RCLib.EncodeHammer( hammer )
-
-                    if hammerName == nil then
-                        DebugPrint({ Text = "Cannot add " .. hammer .. ", invalid" })
-                    else
-                        AddTraitToHero({ TraitName = hammerName })
-                        DebugPrint({ Text = "Added " .. hammer })
-                    end
-                    
-                    if StartingBuildMod.config.UpdateHistory then
-                        if CurrentRun.LootTypeHistory.WeaponUpgrade == nil then CurrentRun.LootTypeHistory.WeaponUpgrade = 0 end
-                        CurrentRun.LootTypeHistory.WeaponUpgrade = CurrentRun.LootTypeHistory.WeaponUpgrade + 1
-                    end
-                end
+            for _, hammer in ipairs( startingHammers ) do
+                StartingBuildMod.AddHammer( hammer )
             end
 
             if settings.MaxHealth then
@@ -73,12 +75,8 @@ ModUtil.Path.Wrap( "SpawnRoomReward", function ( baseFunc, lootData, args )
             end
         end
 
-        if not StartingBuildMod.config.BlockStartingReward then
-            return baseFunc( lootData, args )
-        end
-
-        return
+        if StartingBuildMod.config.BlockStartingReward then return end
     end
 
-    return baseFunc( lootData, args )
+    return baseFunc( ... )
 end, StartingBuildMod )

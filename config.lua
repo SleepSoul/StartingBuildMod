@@ -3,14 +3,7 @@ local config = {
     BlockStartingReward = true,
     UpdateHistory = true,
 
-    AspectSettings = {
-        ErisRail = {
-            Hammers = {
-                "RocketBomb",
-            },
-            Build = "ZAP"
-        },
-    }
+    AspectSettings = {},
 }
 StartingBuildMod.config = config
 

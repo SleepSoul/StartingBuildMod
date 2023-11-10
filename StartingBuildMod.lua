@@ -2,10 +2,16 @@
     StartingBuildMod
     Author: SleepSoul (Discord: SleepSoul#6006)
     Dependencies: ModUtil, RCLib
-    Define a build, per-aspect, to be applied by default upon starting a run.
+    Define a build, per-aspect, to be applied by default upon starting a run. Compatible with RunControl 1.2.0 or higher.
 ]]
 
 ModUtil.Mod.Register( "StartingBuildMod" )
+
+if ModUtil.Path.Get( "RunControl.ModIndex" ) then
+    table.insert( RunControl.ModIndex, "StartingBuildMod" )
+end
+
+StartingBuildMod.CurrentRunData = {}
 
 function StartingBuildMod.AddBoon( boon )
     local boonCode = RCLib.EncodeBoon( boon.Name )
@@ -52,10 +58,14 @@ ModUtil.Path.Wrap( "SpawnRoomReward", function ( baseFunc, ... )
     if StartingBuildMod.config.Enabled and CurrentRun.CurrentRoom.Name == "RoomOpening" then
         CurrentRun.LootTypeHistory = CurrentRun.LootTypeHistory or {}
 
-        local aspect = RCLib.GetAspectName()
-        local settings = StartingBuildMod.config.AspectSettings[aspect] or {}
+        local settings = RCLib.GetFromList( StartingBuildMod.CurrentRunData, { dataType = "startingBuild" } )
+
+        if IsEmpty( settings ) then -- CurrentRunData from RunControl takes priority over per-aspect config
+            local aspect = RCLib.GetAspectName()
+            settings = StartingBuildMod.config.AspectSettings[aspect] or {}
+        end
         if type( settings.Boons ) == "string" then
-            settings.Boons = StartingBuildMod.Presets[settings.Boons]
+            settings.Boons = StartingBuildMod.Presets[settings.Boons] or {}
         end
 
         if not IsEmpty( settings ) then

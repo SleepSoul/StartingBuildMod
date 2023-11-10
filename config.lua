@@ -4,6 +4,7 @@ local config = {
     UpdateHistory = true,
 
     AspectSettings = {},
+    SaveToRunControl = false,
 }
 StartingBuildMod.config = config
 

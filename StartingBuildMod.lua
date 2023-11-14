@@ -23,14 +23,12 @@ function StartingBuildMod.AddBoon( boon )
             AddTraitToHero({ TraitName = boonCode, Rarity = boonRarity })
         end
 
-        if StartingBuildMod.config.UpdateHistory then
-            local boonData = RCLib.InferItemData( boonCode )
-            local godCode = RCLib.EncodeBoonSet( boonData.God )
+        local boonData = RCLib.InferItemData( boonCode )
+        local godCode = RCLib.EncodeBoonSet( boonData.God )
+
+        if StartingBuildMod.config.UpdateHistory and godCode then
             StartingBuildMod.IncrementGodCount( godCode )
         end
-
-        UpdateHeroTraitDictionary()
-        SortPriorityTraits()
     end
 end
 
@@ -42,27 +40,33 @@ function StartingBuildMod.AddHammer( hammerName )
         if StartingBuildMod.config.UpdateHistory then
             StartingBuildMod.IncrementGodCount( "WeaponUpgrade" )
         end
-        
-        UpdateHeroTraitDictionary()
-        SortPriorityTraits()
     end
 end
 
 function StartingBuildMod.IncrementGodCount( godCode ) -- Increment CurrentRun.LootTypeHistory as the game would if a god were picked up naturally
     if not godCode then return end
-    if CurrentRun.LootTypeHistory[godCode] == nil then CurrentRun.LootTypeHistory[godCode] = 0 end
-    CurrentRun.LootTypeHistory[godCode] = CurrentRun.LootTypeHistory[godCode] + 1
+    IncrementTableValue( CurrentRun.LootTypeHistory, godCode )
+    IncrementTableValue( GameState.LootPickups, godCode )
+    if not IsEmpty( CurrentRun.RoomHistory ) then
+        depth = TableLength( CurrentRun.RoomHistory )
+    end
+    table.insert( CurrentRun.LootChoiceHistory, {
+        Depth = depth,
+        UpgradeName = godCode,
+        UpgradeChoices = {}
+    } )
 end
 
-ModUtil.Path.Wrap( "SpawnRoomReward", function ( baseFunc, ... )
-    if StartingBuildMod.config.Enabled and CurrentRun.CurrentRoom.Name == "RoomOpening" then
+ModUtil.Path.Wrap( "StartRoom", function( baseFunc, ... )
+    if StartingBuildMod.config.Enabled then
         CurrentRun.LootTypeHistory = CurrentRun.LootTypeHistory or {}
+        CurrentRun.LootChoiceHistory = CurrentRun.LootChoiceHistory or {}
 
-        local settings = RCLib.GetFromList( StartingBuildMod.CurrentRunData, { dataType = "startingBuild" } )
+        local settings = RCLib.GetFromList( StartingBuildMod.CurrentRunData, { dataType = "startingBuild" } ) -- RunControl takes priority
 
-        if IsEmpty( settings ) then -- CurrentRunData from RunControl takes priority over per-aspect config
+        if IsEmpty( settings ) then
             local aspect = RCLib.GetAspectName()
-            settings = StartingBuildMod.config.AspectSettings[aspect] or {}
+            settings = StartingBuildMod.config.AspectSettings[aspect] or {} -- Use this only if RunControl doesn't give us anything
         end
         if type( settings.Boons ) == "string" then
             settings.Boons = StartingBuildMod.Presets[settings.Boons] or {}
@@ -84,9 +88,13 @@ ModUtil.Path.Wrap( "SpawnRoomReward", function ( baseFunc, ... )
                 AddMaxHealth( settings.MaxHealth - 50, nil )
             end
         end
-
-        if StartingBuildMod.config.BlockStartingReward then return end
     end
 
     return baseFunc( ... )
+end, StartingBuildMod )
+
+ModUtil.Path.Wrap( "SpawnRoomReward", function( baseFunc, ... )
+    if CurrentRun.CurrentRoom.Name ~= "RoomOpening" or not StartingBuildMod.config.Enabled or not StartingBuildMod.config.BlockStartingReward then
+        return baseFunc( ... )
+    end
 end, StartingBuildMod )
